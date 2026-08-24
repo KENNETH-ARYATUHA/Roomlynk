@@ -1,0 +1,113 @@
+
+:root {
+  --color-bg: #FDFBF7;
+  --color-surface: #FFFFFF;
+  --color-text: #1B1B1B;
+  --color-text-muted: #6B6B6B;
+  --color-primary: #1B4332;
+  --color-primary-hover: #143726;
+  --color-accent: #D97757;
+  --color-border: #E5E1D8;
+  --color-danger: #B3261E;
+  --color-vacant: #2D6A4F;
+  --color-booked: #8D8D8D;
+  --radius: 10px;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.app-main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+
+.navbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 10;
+}
+.navbar__brand { font-weight: 700; color: var(--color-primary); text-decoration: none; font-size: 1.1rem; }
+.navbar__links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.navbar__links a { color: var(--color-text); text-decoration: none; font-weight: 500; }
+.navbar__sub-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+.navbar__sub-badge--active { background: #E4F3EB; color: var(--color-primary); }
+.navbar__sub-badge--inactive { background: #F0EEE7; color: var(--color-text-muted); }
+.navbar__logout { background: none; border: none; color: var(--color-text-muted); cursor: pointer; }
+
+.btn { padding: 10px 18px; border-radius: var(--radius); border: none; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn--primary { background: var(--color-primary); color: white; }
+.btn--primary:hover:not(:disabled) { background: var(--color-primary-hover); }
+.btn--secondary { background: var(--color-surface); color: var(--color-primary); border: 1px solid var(--color-primary); }
+.btn--danger { background: var(--color-danger); color: white; }
+
+.field { display: block; margin-bottom: 14px; }
+.field__label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+.field__input, .field select, .field textarea, .field input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--color-border);
+  border-radius: var(--radius); font-size: 1rem; background: var(--color-surface);
+}
+.field__input--error { border-color: var(--color-danger); }
+.field__error { min-height: 1.2em; color: var(--color-danger); font-size: 0.8rem; margin: 4px 0 0; }
+.field__hint { font-size: 0.8rem; color: var(--color-text-muted); margin: 4px 0 0; }
+.form-error { color: var(--color-danger); font-weight: 600; }
+.form-note { color: var(--color-text-muted); }
+.checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+
+.auth-page { max-width: 420px; margin: 40px auto; }
+.role-toggle { display: flex; gap: 8px; margin-bottom: 20px; }
+.role-toggle button { flex: 1; padding: 10px; border: 1px solid var(--color-border); background: var(--color-surface); border-radius: var(--radius); cursor: pointer; }
+.role-toggle__active { border-color: var(--color-primary) !important; color: var(--color-primary); font-weight: 700; }
+
+.room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+.room-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; }
+.room-card__photo-wrap { position: relative; aspect-ratio: 4 / 3; background: var(--color-border); }
+.room-card__photo-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.room-card__no-photo { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--color-text-muted); }
+.room-card__status { position: absolute; top: 8px; right: 8px; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: white; }
+.room-card__status--vacant { background: var(--color-vacant); }
+.room-card__status--booked { background: var(--color-booked); }
+.room-card__body { padding: 12px; }
+.room-card__meta { color: var(--color-text-muted); margin: 4px 0; }
+.room-card__price { font-weight: 700; color: var(--color-primary); }
+.room-card__actions { margin-top: 10px; }
+
+.filters { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+.filters input, .filters select { padding: 10px; border-radius: var(--radius); border: 1px solid var(--color-border); }
+
+.paywall-notice { background: #FBF1EC; border: 1px solid var(--color-accent); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 12px 0 24px; }
+.stat-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 16px; text-align: center; }
+.stat-card__value { display: block; font-size: 1.6rem; font-weight: 800; color: var(--color-primary); }
+.stat-card__label { font-size: 0.8rem; color: var(--color-text-muted); }
+
+.booking-list { list-style: none; padding: 0; }
+.booking-list__item { display: flex; gap: 12px; align-items: center; padding: 12px; border-bottom: 1px solid var(--color-border); }
+.booking-list__status { margin-left: auto; text-transform: capitalize; font-weight: 700; }
+
+.empty-state { color: var(--color-text-muted); padding: 24px 0; text-align: center; }
+
+@media (max-width: 480px) {
+  .navbar__links { gap: 10px; font-size: 0.9rem; }
+}
+.welcome-page { max-width: 720px; margin: 60px auto; text-align: center; padding: 0 16px; }
+.welcome-page h1 { font-size: 2rem; margin-bottom: 8px; color: var(--color-primary); }
+.welcome-page__subtitle { color: var(--color-text-muted); font-size: 1.05rem; margin-bottom: 32px; }
+.welcome-page__cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; }
+.welcome-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 24px; }
+.welcome-card h2 { margin-top: 0; color: var(--color-primary); }
+.welcome-card p { color: var(--color-text-muted); min-height: 3em; }
+.welcome-page__login-hint { margin-top: 24px; color: var(--color-text-muted); }
+.welcome-page__login-hint a { color: var(--color-primary); cursor: pointer; text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .welcome-page__cards { grid-template-columns: 1fr; }
+}
