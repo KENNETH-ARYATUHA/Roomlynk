@@ -1,58 +1,48 @@
-// The actual entry point of the PWA — this is what a student or landlord
-// sees the first time they open the installed app icon. It sells the two
-// value props (free browsing for students, free first listings for
-// landlords) and routes each into Register pre-selected to their role.
+// The first screen of the installed app. Tagline from the documentation:
+// "Find. Verify. Pay. Stay."  Logged-in users skip straight to their home.
 
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { homePathFor } from '@/lib/roles';
 import { Button } from '@/components/ui/Button';
-import { useEffect } from 'react';
 
 export function Welcome() {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // If someone already has a session, skip the pitch and take them straight
-  // to their dashboard the welcome screen is only for first-time/logged-out visits.
   useEffect(() => {
-    if (!isLoading && user) {
-      navigate(user.role === 'landlord' ? '/landlord' : '/browse', { replace: true });
-    }
+    if (!isLoading && user) navigate(homePathFor(user), { replace: true });
   }, [isLoading, user, navigate]);
 
   if (isLoading || user) return null;
 
   return (
     <div className="welcome-page">
-      <h1>Find a room. Fill a room. No middlemen.</h1>
+      <h1>Find. Verify. Pay. Stay.</h1>
       <p className="welcome-page__subtitle">
-        Campus RoomLynk connects students and landlords directly: verified
-        listings, real photos, no agent fees.
+        Campus RoomLynk connects students with verified landlords: current room
+        photos taken in the app, clear prices, and rent records you can trust.
       </p>
 
       <div className="welcome-page__cards">
         <div className="welcome-card">
           <h2>I'm a Student</h2>
-          <p>Browse vacant rooms near campus for free. Message and book once you're ready.</p>
-          <Button onClick={() => navigate('/register', { state: { role: 'student' } })}>
-            Find a Room
-          </Button>
+          <p>Browse available rooms from approved landlords, compare prices and see exactly what you get.</p>
+          <Button onClick={() => navigate('/register', { state: { role: 'student' } })}>Find a Room</Button>
         </div>
 
         <div className="welcome-card">
           <h2>I'm a Landlord</h2>
-          <p>List your first 2 rooms for free. Reach students directly, no agent cut.</p>
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/register', { state: { role: 'landlord' } })}
-          >
-            List a Room
+          <p>Register your hostel. Once approved you can publish and manage your rooms yourself.</p>
+          <Button variant="secondary" onClick={() => navigate('/register', { state: { role: 'landlord' } })}>
+            Register my Hostel
           </Button>
         </div>
       </div>
 
       <p className="welcome-page__login-hint">
-        Already have an account? <a onClick={() => navigate('/register')}>Log in</a>
+        Already have an account? <a onClick={() => navigate('/login')}>Log in</a>
       </p>
     </div>
   );

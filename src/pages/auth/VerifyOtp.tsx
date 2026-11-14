@@ -1,15 +1,21 @@
+// Step 2: type the 6-digit code. Used for BOTH registering and logging in:
+// the server decides which one based on whether the phone already has an account.
+
 import { useState, useEffect, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, type VerifyParams } from '@/context/AuthContext';
+import { homePathFor } from '@/lib/roles';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import type { UserRole } from '@/types';
 
+// Whatever Register.tsx / Login.tsx passed along with navigate(..., { state }).
 interface LocationState {
   phone: string;
-  fullName: string;
-  role: UserRole;
+  fullName?: string;
+  role?: VerifyParams['role'];
   email?: string;
+  hostel?: VerifyParams['hostel'];
+  devCode?: string;
 }
 
 export function VerifyOtp() {
@@ -19,51 +25,49 @@ export function VerifyOtp() {
 
   const { verifyOtp } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const state = location.state as LocationState | null;
+  const state = useLocation().state as LocationState | null;
 
-  // Redirect belongs in an effect, not directly in the render body --
-  // calling navigate() while rendering can trigger "Cannot update a
-  // component while rendering a different component" in Strict Mode.
+  // If someone opens /verify-otp directly (no state), send them back.
+  // Redirects belong in an effect, not in the render body.
   useEffect(() => {
-    if (!state?.phone) {
-      navigate('/register', { replace: true });
-    }
+    if (!state?.phone) navigate('/login', { replace: true });
   }, [state, navigate]);
 
   if (!state?.phone) return null;
+  const s = state; // a const keeps TypeScript's "it's not null" knowledge inside handleSubmit
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
 
-    if (!/^\d{6}$/.test(code)) {
-      setError('Enter the 6-digit code sent to your phone');
-      return;
-    }
+    if (!/^\d{6}$/.test(code)) return setError('Enter the 6-digit code sent to your phone');
 
     setIsSubmitting(true);
     const result = await verifyOtp({
-      phone: state!.phone,
+      phone: s.phone,
       code,
-      fullName: state!.fullName,
-      role: state!.role,
-      email: state!.email,
+      fullName: s.fullName,
+      role: s.role,
+      email: s.email,
+      hostel: s.hostel,
     });
     setIsSubmitting(false);
 
-    if (!result.ok) {
-      setError(result.error ?? 'Incorrect or expired code');
-      return;
-    }
+    if (!result.ok || !result.user) return setError(result.error ?? 'Incorrect or expired code');
 
-    navigate(state!.role === 'landlord' ? '/landlord' : '/browse', { replace: true });
+    // Land on the right home for this user's ROLE (the server told us what it is).
+    navigate(homePathFor(result.user), { replace: true });
   }
 
   return (
     <div className="auth-page">
       <h1>Enter verification code</h1>
-      <p className="auth-page__hint">We sent a 6-digit code to {state.phone}</p>
+      <p className="auth-page__hint">We sent a 6-digit code to {s.phone}</p>
+
+      {/* import.meta.env.DEV is true only under `npm run dev`; it's stripped out of production builds. */}
+      {import.meta.env.DEV && s.devCode && (
+        <p className="dev-hint">Dev mode: your code is <strong>{s.devCode}</strong> (real SMS comes later)</p>
+      )}
 
       <form onSubmit={handleSubmit}>
         <Input

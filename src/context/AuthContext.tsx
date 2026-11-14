@@ -1,84 +1,126 @@
+// Who is logged in? This "context" makes the answer available to every
+// component via the useAuth() hook, without passing props down manually.
+//
+// Login flow (no passwords, doc §3):
+//   1. requestOtp(phone)   → server creates a 6-digit code
+//   2. verifyOtp({...})    → server checks it, returns { user, token }
+//   3. We keep the token in localStorage; apiClient.ts attaches it to every request.
+//
+// PHASE 1 additions:
+//   • On app start we ask the server "/auth/me" so a landlord approved while
+//     away sees their new status immediately (and a suspended user is logged out).
+//   • refreshUser() lets any page re-check the status on demand.
 
-// No passwords — phone + 6-digit SMS code, then a JWT.
-// Flow:
-//   1. requestOtp(phone)            -> backend sends the SMS code
-//   2. verifyOtp(phone, code, ...)  -> backend returns { user, token }
-//   3. token goes to localStorage; apiClient.ts attaches it automatically
-
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { apiRequest } from '@/lib/apiClient';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { apiRequest, TOKEN_KEY, USER_KEY } from '@/lib/apiClient';
 import type { User, UserRole } from '@/types';
+
+export interface VerifyParams {
+  phone: string;
+  code: string;
+  // Only needed when registering a NEW account:
+  fullName?: string;
+  role?: Extract<UserRole, 'student' | 'landlord'>;
+  email?: string;
+  hostel?: { name: string; district: string; area: string; address?: string };
+}
 
 interface AuthContextValue {
   user: User | null;
-  isLoading: boolean;
-  requestOtp: (phone: string) => Promise<{ ok: boolean; error?: string }>;
-  verifyOtp: (params: {
-    phone: string;
-    code: string;
-    fullName?: string;
-    role?: UserRole;
-    email?: string;
-  }) => Promise<{ ok: boolean; error?: string }>;
+  isLoading: boolean; // true while we double-check a saved login with the server
+  requestOtp: (phone: string) => Promise<{ ok: boolean; error?: string; devCode?: string }>;
+  verifyOtp: (params: VerifyParams) => Promise<{ ok: boolean; error?: string; user?: User }>;
+  refreshUser: () => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-interface AuthProviderType extends React.FC<{ children: ReactNode }> {
-  useAuth?: () => AuthContextValue;
+function readSavedUser(): User | null {
+  try {
+    const saved = localStorage.getItem(USER_KEY);
+    return saved && localStorage.getItem(TOKEN_KEY) ? (JSON.parse(saved) as User) : null;
+  } catch {
+    return null;
+  }
 }
 
-export const AuthProvider: AuthProviderType = function AuthProvider({ children }) {
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      const savedUser = localStorage.getItem('roomlynk_user');
-      const savedToken = localStorage.getItem('roomlynk_token');
-      return savedUser && savedToken ? (JSON.parse(savedUser) as User) : null;
-    } catch {
-      return null;
-    }
-  });
+function saveUser(user: User) {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
 
-  const [isLoading] = useState(() => false);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  // Start with the saved user so the page doesn't flash "logged out" on refresh...
+  const [user, setUser] = useState<User | null>(readSavedUser);
+  // ...but stay in "loading" until the server confirms the saved login is still valid.
+  const [isLoading, setIsLoading] = useState<boolean>(() => localStorage.getItem(TOKEN_KEY) !== null);
+
+  function logout() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    setUser(null);
+  }
+
+  async function refreshUser() {
+    const result = await apiRequest<User>('/auth/me');
+    if (result.ok && result.data) {
+      saveUser(result.data);
+      setUser(result.data);
+    } else if (result.status === 401 || result.status === 403) {
+      logout(); // token rejected or account suspended
+    }
+    // Any other failure (e.g. server unreachable): keep the cached user so
+    // the app still works on patchy campus Wi-Fi.
+  }
+
+  // Runs once when the app opens.
+  useEffect(() => {
+    if (localStorage.getItem(TOKEN_KEY) === null) return;
+    let cancelled = false; // protects against React StrictMode running effects twice in dev
+
+    apiRequest<User>('/auth/me').then((result) => {
+      if (cancelled) return;
+      if (result.ok && result.data) {
+        saveUser(result.data);
+        setUser(result.data);
+      } else if (result.status === 401 || result.status === 403) {
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function requestOtp(phone: string) {
-    const result = await apiRequest<{ sent: boolean }>('/auth/request-otp', {
+    const result = await apiRequest<{ sent: boolean; devCode?: string }>('/auth/request-otp', {
       method: 'POST',
       body: { phone },
     });
-    return { ok: result.ok, error: result.error };
+    return { ok: result.ok, error: result.error, devCode: result.data?.devCode };
   }
 
-  async function verifyOtp(params: {
-    phone: string;
-    code: string;
-    fullName?: string;
-    role?: UserRole;
-    email?: string;
-  }) {
+  async function verifyOtp(params: VerifyParams) {
     const result = await apiRequest<{ user: User; token: string }>('/auth/verify-otp', {
       method: 'POST',
       body: params,
     });
 
     if (result.ok && result.data) {
-      localStorage.setItem('roomlynk_token', result.data.token);
-      localStorage.setItem('roomlynk_user', JSON.stringify(result.data.user));
+      localStorage.setItem(TOKEN_KEY, result.data.token);
+      saveUser(result.data.user);
       setUser(result.data.user);
+      return { ok: true, user: result.data.user };
     }
-
-    return { ok: result.ok, error: result.error };
-  }
-
-  function logout() {
-    localStorage.removeItem('roomlynk_token');
-    localStorage.removeItem('roomlynk_user');
-    setUser(null);
+    return { ok: false, error: result.error };
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, requestOtp, verifyOtp, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, requestOtp, verifyOtp, refreshUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,14 +1,13 @@
 // One typed fetch wrapper. Every page imports THIS instead of calling
-// fetch() directly — one place to attach the JWT, handle expired sessions,
-// and normalise errors, instead of repeating try/catch everywhere.
+// fetch() directly: one place to attach the login token, handle expired
+// sessions and turn errors into friendly messages.
 
 import type { ApiResult } from '@/types';
 
-const BASE_URL = '/api';
+const BASE_URL = '/api'; // in dev, vite.config.ts forwards /api to the server on port 3000
 
-function getToken(): string | null {
-  return localStorage.getItem('roomlynk_token');
-}
+export const TOKEN_KEY = 'roomlynk_token';
+export const USER_KEY = 'roomlynk_user';
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
@@ -20,7 +19,7 @@ export async function apiRequest<T>(
   { method = 'GET', body }: RequestOptions = {}
 ): Promise<ApiResult<T>> {
   try {
-    const token = getToken();
+    const token = localStorage.getItem(TOKEN_KEY);
 
     const response = await fetch(`${BASE_URL}${path}`, {
       method,
@@ -31,22 +30,23 @@ export async function apiRequest<T>(
       body: body ? JSON.stringify(body) : undefined,
     });
 
-    // 401 = expired/revoked JWT. Clear it so the route guard (Step 6)
-    // redirects to login on the next render instead of looping failed calls.
-    if (response.status === 401) {
-      localStorage.removeItem('roomlynk_token');
-      localStorage.removeItem('roomlynk_user');
-      return { ok: false, error: 'Session expired. Please log in again.' };
-    }
-
     const json = await response.json().catch(() => null);
 
-    if (!response.ok) {
-      return { ok: false, error: json?.message ?? `Request failed (${response.status})` };
+    // 401 = missing/expired token. Clear it so the app sends the user to log in.
+    if (response.status === 401) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      return { ok: false, status: 401, error: json?.message ?? 'Session expired. Please log in again.' };
     }
 
-    return { ok: true, data: json as T };
+    if (!response.ok) {
+      // Our server always replies { message: "..." } on errors (see errorHandler.ts).
+      return { ok: false, status: response.status, error: json?.message ?? `Request failed (${response.status})` };
+    }
+
+    return { ok: true, status: response.status, data: json as T };
   } catch {
+    // fetch itself threw → the server is unreachable (offline, or not running).
     return { ok: false, error: 'Network error. Check your connection and try again.' };
   }
 }

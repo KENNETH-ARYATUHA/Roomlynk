@@ -1,0 +1,134 @@
+// ─────────────────────────────────────────────────────────────────────
+// DATABASE SCHEMA — the "Core Data Entities" section of the documentation.
+//
+// Prisma reads this file and (1) creates the tables for us and
+// (2) generates a fully-typed JavaScript client (`prisma.user.findMany()`).
+//
+// Why Strings instead of enums? SQLite (our zero-setup dev database) has
+// limited enum support. We keep allowed values in comments here and enforce
+// them in code (see src/routes). When we move to PostgreSQL we can
+// upgrade these to real enums.
+// ─────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Everyone who can log in. One table, with a `role` column, because the
+// doc's roles share the same login (phone + OTP).
+model User {
+  id              String    @id @default(cuid())
+  phone           String    @unique // verified by OTP, our login identity
+  fullName        String
+  email           String?
+  role            String // student | landlord | agent | admin | finance
+  status          String    @default("active") // active | suspended (platform-wide ban)
+  phoneVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+
+  // Only landlords have this. The "?" means "optional / may be null".
+  landlordProfile LandlordProfile?
+}
+
+// Doc §3: "Landlord profile" — the registration that an administrator approves.
+model LandlordProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  hostelName String
+  district   String
+  area       String // town / neighbourhood, e.g. "Kikungiri"
+  address    String? // address or landmark
+  latitude   Float? // map pin (added in a later phase)
+  longitude  Float?
+
+  // pending_review | approved | changes_required | rejected | suspended
+  // This single field is the "approval gate" described in doc §3.3.
+  accountStatus String    @default("pending_review")
+  reviewReason  String? // admin must give a reason for any non-approval decision
+  reviewedById  String? // which admin made the last decision
+  reviewedAt    DateTime?
+  submittedAt   DateTime  @default(now())
+
+  properties Property[]
+}
+
+// Doc §5.2: one landlord can manage one or more hostels/properties.
+model Property {
+  id                String          @id @default(cuid())
+  landlordProfileId String
+  landlordProfile   LandlordProfile @relation(fields: [landlordProfileId], references: [id])
+
+  name      String
+  district  String
+  area      String
+  address   String?
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now())
+
+  rooms Room[]
+}
+
+// Doc §5.2: every room has its OWN price, status and details.
+model Room {
+  id         String   @id @default(cuid())
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id])
+
+  label    String // unique room label/number within the hostel, e.g. "A3"
+  roomType String // Single | Shared | Self-contained | ...
+  capacity Int    @default(1)
+
+  price         Int // UGX, whole shillings (no decimals needed)
+  billingPeriod String  @default("month") // month | semester
+  deposit       Int     @default(0)
+  otherCharges  String? // free text for now, e.g. "Water UGX 10,000/month"
+  facilities    String  @default("[]") // JSON array stored as text (SQLite has no arrays)
+  houseRules    String?
+  description   String
+
+  // available | reserved | occupied | maintenance | unavailable  (doc §5.2)
+  status String @default("available")
+  // draft | published | hidden | suspended  (doc §3.3)
+  // "published" = the landlord has made it visible. No admin approval needed.
+  listingStatus String @default("draft")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([propertyId, label]) // two rooms in one hostel can't share a label
+}
+
+// One-time passwords for phone verification. We store a HASH of the code,
+// never the code itself (same reason we never store plain passwords).
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  attempts  Int      @default(0) // wrong guesses so far (we lock at 5)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+}
+
+// Doc §16: "append-only audit events for approvals, ledger changes...".
+// We only ever INSERT into this table. Never update or delete.
+model AuditEvent {
+  id         String   @id @default(cuid())
+  actorId    String? // who did it (null for system actions)
+  action     String // e.g. "landlord.approve"
+  entityType String // e.g. "LandlordProfile"
+  entityId   String
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+}

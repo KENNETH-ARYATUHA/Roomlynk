@@ -1,93 +1,96 @@
-
-// Browsing this page is free; sending a booking request requires an active
-// subscription. The UI reflects that directly instead of letting the click
-// fail silently against the backend.
+// One room, in full. Doc §5.1: students should see the room-specific price,
+// billing period, deposit and other charges, facilities, rules and location,
+// and be able to tell landlord-provided info apart from inspection-confirmed facts.
+//
+// Booking and enquiries arrive in Phase 3, so the action area is a placeholder.
+// (The old subscription paywall is gone: the business model is commission.)
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiRequest } from '@/lib/apiClient';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/Button';
 import type { Room } from '@/types';
 
 export function RoomDetail() {
   const { roomId } = useParams<{ roomId: string }>();
-  const { user } = useAuth();
-
   const [room, setRoom] = useState<Room | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isBooking, setIsBooking] = useState(false);
-  const [bookingMessage, setBookingMessage] = useState<string | null>(null);
-  const [shareVisit, setShareVisit] = useState(false);
 
   useEffect(() => {
-    async function fetchRoom() {
-      setIsLoading(true);
-      const result = await apiRequest<Room>(`/rooms/${roomId}`);
-      if (result.ok && result.data) setRoom(result.data);
+    let cancelled = false;
+    apiRequest<Room>(`/rooms/${roomId}`).then((result) => {
+      if (cancelled) return;
+      setRoom(result.ok && result.data ? result.data : null);
       setIsLoading(false);
-    }
-    fetchRoom();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [roomId]);
 
-  async function handleBook() {
-    if (!room) return;
-    setIsBooking(true);
-    setBookingMessage(null);
-
-    // shareVisit tells the backend to trigger the automatic safety SMS to a
-    // trusted contact before the student's visit.
-    const result = await apiRequest(`/bookings`, {
-      method: 'POST',
-      body: { roomId: room.id, shareMyVisit: shareVisit },
-    });
-
-    setIsBooking(false);
-    setBookingMessage(result.ok ? 'Booking request sent! The landlord will confirm shortly.' : result.error ?? 'Could not send booking request.');
-  }
-
   if (isLoading) return <p>Loading…</p>;
-  if (!room) return <p>Room not found — it may have just been booked by someone else.</p>;
+  if (!room) return <p>Room not found. It may have been removed or is no longer listed.</p>;
 
-  const canAct = user?.subscriptionActive; // gate only for messaging/booking, never for viewing
+  const { property } = room;
 
   return (
     <div className="room-detail">
       <div className="room-detail__gallery">
-        {room.photos.map((url) => <img key={url} src={url} alt={room.hostelName} loading="lazy" />)}
+        {room.photos.length > 0 ? (
+          room.photos.map((url) => <img key={url} src={url} alt={property.name} loading="lazy" />)
+        ) : (
+          <div className="room-card__no-photo">No in-app photos yet</div>
+        )}
       </div>
 
-      <h1>{room.hostelName}</h1>
-      <p>{room.area} · {room.roomType}</p>
-      <p className="room-detail__price">UGX {room.price.toLocaleString()} / month</p>
+      <h1>{property.name} · Room {room.label}</h1>
+      <p>{property.area}, {property.district}{property.address ? ` · ${property.address}` : ''}</p>
+      <p>{room.roomType} · sleeps {room.capacity}</p>
+
+      <p className="room-detail__price">UGX {room.price.toLocaleString()} / {room.billingPeriod}</p>
+      <ul className="detail-list">
+        <li>Deposit: {room.deposit > 0 ? `UGX ${room.deposit.toLocaleString()}` : 'None'}</li>
+        {room.otherCharges && <li>Other charges: {room.otherCharges}</li>}
+        <li>Status: {room.status}</li>
+      </ul>
+
+      <h2>About this room</h2>
       <p>{room.description}</p>
 
-      <a
-        href={`https://www.google.com/maps/dir/?api=1&destination=${room.latitude},${room.longitude}`}
-        target="_blank"
-        rel="noreferrer"
-        className="room-detail__map-link"
-      >
-        Open location in Google Maps
-      </a>
-
-      {room.status === 'booked' ? (
-        <p className="room-detail__unavailable">This room was just booked and is no longer available.</p>
-      ) : !canAct ? (
-        <div className="paywall-notice">
-          <p>Subscribe (UGX 3,600/month) to message this landlord or book this room.</p>
-          <Button onClick={() => (window.location.href = '/subscribe')}>Subscribe</Button>
-        </div>
-      ) : (
-        <div className="room-detail__book">
-          <label className="checkbox-row">
-            <input type="checkbox" checked={shareVisit} onChange={(e) => setShareVisit(e.target.checked)} />
-            Send my planned visit details to a trusted contact automatically
-          </label>
-          <Button onClick={handleBook} isLoading={isBooking}>Send Booking Request</Button>
-          {bookingMessage && <p className="form-note">{bookingMessage}</p>}
-        </div>
+      {room.facilities.length > 0 && (
+        <>
+          <h2>Facilities</h2>
+          <ul className="chip-list">{room.facilities.map((f) => <li key={f}>{f}</li>)}</ul>
+        </>
       )}
+
+      {room.houseRules && (
+        <>
+          <h2>House rules</h2>
+          <p>{room.houseRules}</p>
+        </>
+      )}
+
+      {/* Doc §5.1: "Clearly distinguish landlord-provided information from facts confirmed during an inspection." */}
+      <p className="trust-note">
+        {room.latestInspectionAt
+          ? `Inspected on ${new Date(room.latestInspectionAt).toLocaleDateString()}.`
+          : 'Not yet inspected. Details above are provided by the landlord.'}
+      </p>
+
+      {property.latitude != null && property.longitude != null && (
+        <a
+          href={`https://www.google.com/maps/dir/?api=1&destination=${property.latitude},${property.longitude}`}
+          target="_blank"
+          rel="noreferrer"
+          className="room-detail__map-link"
+        >
+          Open location in Google Maps
+        </a>
+      )}
+
+      <div className="paywall-notice">
+        <p>Enquiries, viewing requests and booking are coming in the next release.</p>
+      </div>
     </div>
   );
 }
