@@ -1,6 +1,6 @@
 ﻿// REGISTRATION: step 1 of 2 (step 2 is VerifyOtp.tsx).
 //
-// Doc Â§3: "A landlord creates an account using their full name, active phone
+// Doc §3: "A landlord creates an account using their full name, active phone
 // number, hostel name and hostel location." So the form shows extra hostel
 // fields when "I'm a Landlord" is selected. Landlord accounts then wait for
 // administrator approval; student accounts work immediately.
@@ -25,7 +25,7 @@ export function Register() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  // Landlord-only fields (doc Â§3.1: district, town/area, address or landmark):
+  // Landlord-only fields (doc §3.1: district, town/area, address or landmark):
   const [hostelName, setHostelName] = useState('');
   const [district, setDistrict] = useState('Kabale');
   const [area, setArea] = useState('');

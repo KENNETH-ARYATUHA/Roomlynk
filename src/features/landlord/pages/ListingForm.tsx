@@ -1,5 +1,4 @@
-﻿
-// Uploads photos straight to Cloudinary from the browser (backend never
+﻿// Uploads photos straight to Cloudinary from the browser (backend never
 // touches the binary data), captures GPS via the phone's own location API.
 
 import { useState, type FormEvent } from 'react';
@@ -41,7 +40,7 @@ export function ListingForm() {
   }
 
   function captureGpsPin() {
-    // Uses the phone's own GPS â€” no map picker UI needed for a landlord
+    // Uses the phone's own GPS — no map picker UI needed for a landlord
     // standing in the actual room.
     if (!navigator.geolocation) {
       setError('GPS is not available on this device/browser.');
@@ -116,7 +115,7 @@ export function ListingForm() {
         </label>
 
         <Button type="button" variant="secondary" onClick={captureGpsPin}>
-          {coords ? 'GPS pin captured âœ“' : 'Drop GPS pin (use current location)'}
+          {coords ? 'GPS pin captured ✓' : 'Drop GPS pin (use current location)'}
         </Button>
 
         {error && <p className="form-error">{error}</p>}

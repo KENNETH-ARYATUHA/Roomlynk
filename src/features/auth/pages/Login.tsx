@@ -28,7 +28,7 @@ export function Login() {
 
     if (!result.ok) return setError(result.error ?? 'Could not send the code. Try again.');
 
-    // No fullName/role here â†’ the server treats this as a LOGIN, not a sign-up.
+    // No fullName/role here → the server treats this as a LOGIN, not a sign-up.
     navigate('/verify-otp', { state: { phone, devCode: result.devCode } });
   }
 

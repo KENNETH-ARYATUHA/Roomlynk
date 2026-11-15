@@ -1,11 +1,11 @@
 ﻿// The landlord's home. What they see depends on their ACCOUNT STATUS
-// (doc Â§3.3). This is the "approval gate" from the student's/landlord's side:
+// (doc §3.3). This is the "approval gate" from the student's/landlord's side:
 //
-//   pending_review   â†’ "we're reviewing you" (nothing is public yet)
-//   changes_required â†’ read the admin's reason, fix details, resubmit
-//   rejected         â†’ same: reason + resubmit
-//   approved         â†’ can manage rooms (Phase 2 adds the room tools)
-//   suspended        â†’ blocked, contact support
+//   pending_review   → "we're reviewing you" (nothing is public yet)
+//   changes_required → read the admin's reason, fix details, resubmit
+//   rejected         → same: reason + resubmit
+//   approved         → can manage rooms (Phase 2 adds the room tools)
+//   suspended        → blocked, contact support
 
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '@/app/providers/AuthProvider';
@@ -24,7 +24,7 @@ export function LandlordDashboard() {
   return (
     <div className="landlord-dashboard">
       <h1>{profile.hostelName}</h1>
-      <p className="muted">{profile.area}, {profile.district}{profile.address ? ` Â· ${profile.address}` : ''}</p>
+      <p className="muted">{profile.area}, {profile.district}{profile.address ? ` · ${profile.address}` : ''}</p>
 
       {profile.accountStatus === 'pending_review' && (
         <div className="banner banner--info">
@@ -52,7 +52,7 @@ export function LandlordDashboard() {
 
       {profile.accountStatus === 'approved' && (
         <div className="banner banner--ok">
-          <strong>Your account is approved âœ“</strong>
+          <strong>Your account is approved ✓</strong>
           <p>
             You can publish and manage rooms without any further approval. The room tools (with the in-app
             camera) arrive in the next release.
@@ -93,7 +93,7 @@ function ResubmitForm({ profile, onDone }: { profile: LandlordProfile; onDone: (
 
     setIsSubmitting(false);
     if (!result.ok) return setError(result.error ?? 'Could not resubmit.');
-    await onDone(); // re-fetch the user â†’ status becomes "pending_review" and this form disappears
+    await onDone(); // re-fetch the user → status becomes "pending_review" and this form disappears
   }
 
   return (

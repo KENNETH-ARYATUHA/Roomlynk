@@ -1,4 +1,4 @@
-﻿// One room, in full. Doc Â§5.1: students should see the room-specific price,
+﻿// One room, in full. Doc §5.1: students should see the room-specific price,
 // billing period, deposit and other charges, facilities, rules and location,
 // and be able to tell landlord-provided info apart from inspection-confirmed facts.
 //
@@ -27,7 +27,7 @@ export function RoomDetail() {
     };
   }, [roomId]);
 
-  if (isLoading) return <p>Loadingâ€¦</p>;
+  if (isLoading) return <p>Loading…</p>;
   if (!room) return <p>Room not found. It may have been removed or is no longer listed.</p>;
 
   const { property } = room;
@@ -42,9 +42,9 @@ export function RoomDetail() {
         )}
       </div>
 
-      <h1>{property.name} Â· Room {room.label}</h1>
-      <p>{property.area}, {property.district}{property.address ? ` Â· ${property.address}` : ''}</p>
-      <p>{room.roomType} Â· sleeps {room.capacity}</p>
+      <h1>{property.name} · Room {room.label}</h1>
+      <p>{property.area}, {property.district}{property.address ? ` · ${property.address}` : ''}</p>
+      <p>{room.roomType} · sleeps {room.capacity}</p>
 
       <p className="room-detail__price">UGX {room.price.toLocaleString()} / {room.billingPeriod}</p>
       <ul className="detail-list">
@@ -70,7 +70,7 @@ export function RoomDetail() {
         </>
       )}
 
-      {/* Doc Â§5.1: "Clearly distinguish landlord-provided information from facts confirmed during an inspection." */}
+      {/* Doc §5.1: "Clearly distinguish landlord-provided information from facts confirmed during an inspection." */}
       <p className="trust-note">
         {room.latestInspectionAt
           ? `Inspected on ${new Date(room.latestInspectionAt).toLocaleDateString()}.`

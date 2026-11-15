@@ -1,5 +1,4 @@
-﻿
-// Free, no subscription gate â€” filtering by area/type/price happens
+﻿// Free, no subscription gate — filtering by area/type/price happens
 // server-side via query params so the API can paginate later.
 
 import { useEffect, useState } from 'react';
@@ -49,7 +48,7 @@ export function BrowseRooms() {
       <h1>Find a room</h1>
 
       <div className="filters">
-        <input type="text" placeholder="Search hostel nameâ€¦" value={filters.query ?? ''} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))} />
+        <input type="text" placeholder="Search hostel name…" value={filters.query ?? ''} onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))} />
 
         <select value={filters.area ?? ''} onChange={(e) => setFilters((f) => ({ ...f, area: e.target.value || undefined }))}>
           <option value="">All areas</option>
@@ -64,7 +63,7 @@ export function BrowseRooms() {
         <input type="number" placeholder="Max price (UGX)" value={filters.maxPrice ?? ''} onChange={(e) => setFilters((f) => ({ ...f, maxPrice: e.target.value ? Number(e.target.value) : undefined }))} />
       </div>
 
-      {isLoading && <p>Loading roomsâ€¦</p>}
+      {isLoading && <p>Loading rooms…</p>}
       {error && <p className="form-error">{error}</p>}
       {!isLoading && !error && rooms.length === 0 && (
         <p className="empty-state">No vacant rooms match those filters yet. Try widening your search.</p>

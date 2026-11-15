@@ -54,7 +54,7 @@ export default function App() {
               <Route path="/coming-soon" element={<ComingSoon />} />
             </Route>
 
-            {/* Unknown URLs â†’ landing page */}
+            {/* Unknown URLs → landing page */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

@@ -1,6 +1,5 @@
-﻿
-// The single place that enforces "who is allowed to see this page."
-// Three roles, three very different dashboards â€” pass `allowedRoles` and it
+﻿// The single place that enforces "who is allowed to see this page."
+// Three roles, three very different dashboards — pass `allowedRoles` and it
 // redirects anyone who doesn't match.
 
 import { Navigate, Outlet } from 'react-router-dom';
@@ -14,9 +13,9 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const { user, isLoading } = useAuth();
 
-  // Don't redirect while still checking localStorage â€” that would bounce a
+  // Don't redirect while still checking localStorage — that would bounce a
   // logged-in user to /login for a split second on every page refresh.
-  if (isLoading) return <div className="page-loading">Loadingâ€¦</div>;
+  if (isLoading) return <div className="page-loading">Loading…</div>;
 
   if (!user) return <Navigate to="/login" replace />;
 
