@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+﻿import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/app/providers/AuthProvider';
 
 // Human-friendly labels for the landlord's approval status chip.
 const STATUS_LABEL: Record<string, string> = {

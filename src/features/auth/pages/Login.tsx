@@ -1,10 +1,10 @@
-// LOGIN for people who already have an account: just a phone number.
+﻿// LOGIN for people who already have an account: just a phone number.
 // (Before Phase 1, "Log in" showed the full registration form, which asked
 // returning users for their name again.)
 
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/app/providers/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -28,7 +28,7 @@ export function Login() {
 
     if (!result.ok) return setError(result.error ?? 'Could not send the code. Try again.');
 
-    // No fullName/role here → the server treats this as a LOGIN, not a sign-up.
+    // No fullName/role here â†’ the server treats this as a LOGIN, not a sign-up.
     navigate('/verify-otp', { state: { phone, devCode: result.devCode } });
   }
 

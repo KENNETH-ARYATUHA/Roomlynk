@@ -1,18 +1,18 @@
-// Who is logged in? This "context" makes the answer available to every
+﻿// Who is logged in? This "context" makes the answer available to every
 // component via the useAuth() hook, without passing props down manually.
 //
-// Login flow (no passwords, doc §3):
-//   1. requestOtp(phone)   → server creates a 6-digit code
-//   2. verifyOtp({...})    → server checks it, returns { user, token }
+// Login flow (no passwords, doc Â§3):
+//   1. requestOtp(phone)   â†’ server creates a 6-digit code
+//   2. verifyOtp({...})    â†’ server checks it, returns { user, token }
 //   3. We keep the token in localStorage; apiClient.ts attaches it to every request.
 //
 // PHASE 1 additions:
-//   • On app start we ask the server "/auth/me" so a landlord approved while
+//   â€¢ On app start we ask the server "/auth/me" so a landlord approved while
 //     away sees their new status immediately (and a suspended user is logged out).
-//   • refreshUser() lets any page re-check the status on demand.
+//   â€¢ refreshUser() lets any page re-check the status on demand.
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { apiRequest, TOKEN_KEY, USER_KEY } from '@/lib/apiClient';
+import { apiRequest, TOKEN_KEY, USER_KEY } from '@/services/apiClient';
 import type { User, UserRole } from '@/types';
 
 export interface VerifyParams {

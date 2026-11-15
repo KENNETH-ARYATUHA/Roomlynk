@@ -1,9 +1,9 @@
-// The first screen of the installed app. Tagline from the documentation:
+﻿// The first screen of the installed app. Tagline from the documentation:
 // "Find. Verify. Pay. Stay."  Logged-in users skip straight to their home.
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/app/providers/AuthProvider';
 import { homePathFor } from '@/lib/roles';
 import { Button } from '@/components/ui/Button';
 

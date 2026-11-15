@@ -1,12 +1,12 @@
-// ADMIN: landlord review queue (doc §3.1 and §9.1).
+﻿// ADMIN: landlord review queue (doc Â§3.1 and Â§9.1).
 //
 // Left: a list of registrations filtered by status. Right: the selected
 // registration with duplicate warnings and the decision buttons.
 // There is NO room-approval queue. Rooms publish instantly once the landlord
-// account is approved (doc §3.1).
+// account is approved (doc Â§3.1).
 
 import { useEffect, useState } from 'react';
-import { apiRequest } from '@/lib/apiClient';
+import { apiRequest } from '@/services/apiClient';
 import { Button } from '@/components/ui/Button';
 import type { AdminDecision, AdminLandlord, AdminLandlordDetail, AuditEvent, LandlordAccountStatus } from '@/types';
 
@@ -107,7 +107,7 @@ export function AdminDashboard() {
             <li key={l.id}>
               <button onClick={() => open(l.id)} className={selected?.id === l.id ? 'review-list__active' : ''}>
                 <strong>{l.hostelName}</strong>
-                <span>{l.landlordName} · {l.area}</span>
+                <span>{l.landlordName} Â· {l.area}</span>
                 <span className="muted">Submitted {new Date(l.submittedAt).toLocaleDateString()}</span>
               </button>
             </li>
@@ -122,8 +122,8 @@ export function AdminDashboard() {
               <h2>{selected.hostelName}</h2>
               <ul className="detail-list">
                 <li>Landlord: {selected.landlordName}</li>
-                <li>Phone: {selected.phone} {selected.phoneVerified ? '(verified ✓)' : '(NOT verified)'}</li>
-                <li>Location: {selected.area}, {selected.district}{selected.address ? ` · ${selected.address}` : ''}</li>
+                <li>Phone: {selected.phone} {selected.phoneVerified ? '(verified âœ“)' : '(NOT verified)'}</li>
+                <li>Location: {selected.area}, {selected.district}{selected.address ? ` Â· ${selected.address}` : ''}</li>
                 <li>Status: {selected.accountStatus}</li>
                 {selected.reviewReason && <li>Last reason: {selected.reviewReason}</li>}
               </ul>
@@ -162,8 +162,8 @@ export function AdminDashboard() {
       <ul className="audit-list">
         {audit.map((e) => (
           <li key={e.id}>
-            <code>{e.action}</code> · {new Date(e.createdAt).toLocaleString()}
-            {e.reason && <span className="muted"> · “{e.reason}”</span>}
+            <code>{e.action}</code> Â· {new Date(e.createdAt).toLocaleString()}
+            {e.reason && <span className="muted"> Â· â€œ{e.reason}â€</span>}
           </li>
         ))}
       </ul>

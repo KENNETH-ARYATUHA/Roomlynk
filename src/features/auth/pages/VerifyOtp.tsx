@@ -1,9 +1,9 @@
-// Step 2: type the 6-digit code. Used for BOTH registering and logging in:
+﻿// Step 2: type the 6-digit code. Used for BOTH registering and logging in:
 // the server decides which one based on whether the phone already has an account.
 
 import { useState, useEffect, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth, type VerifyParams } from '@/context/AuthContext';
+import { useAuth, type VerifyParams } from '@/app/providers/AuthProvider';
 import { homePathFor } from '@/lib/roles';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
