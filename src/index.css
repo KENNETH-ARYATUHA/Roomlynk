@@ -1,16 +1,51 @@
-
+/* ============================================================
+   Campus RoomLynk: global styles
+   Colours follow the PearlVector brand (navy + green). To change the look of
+   the whole app, change the variables in this :root block. Nothing else.
+   ============================================================ */
 :root {
-  --color-bg: #FDFBF7;
+  /* -- PearlVector brand colours (sampled from the brand flyer) -- */
+  --brand-navy: #031D4E;
+  --brand-green: #0F6445;
+
+  /* -- Page and text -- */
+  --color-bg: #F7F8FA;
   --color-surface: #FFFFFF;
   --color-text: #1B1B1B;
   --color-text-muted: #6B6B6B;
-  --color-primary: #1B4332;
-  --color-primary-hover: #143726;
-  --color-accent: #D97757;
-  --color-border: #E5E1D8;
+  --color-border: #DCE2EA;
+
+  /* -- Primary = navy (buttons, headings, navbar) -- */
+  --color-primary: var(--brand-navy);
+  --color-primary-hover: #021437;
+  --color-primary-tint: #EBEDF1;          /* very light navy, for soft backgrounds */
+  --color-primary-tint-border: #D2D6DF;
+
+  /* -- Secondary = green (success, "available", trust, highlights) -- */
+  --color-secondary: var(--brand-green);
+  --color-secondary-hover: #0B4B34;
+  --color-secondary-tint: #E7F0EC;
+  --color-secondary-tint-border: #ABC9BE;
+  --color-accent: var(--brand-green);
+
+  /* -- Text colours that sit ON the navy navbar -- */
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-soft: #E3EAF5;
+  --color-on-primary-muted: #AEBBD3;
+
+  /* -- Signals (kept distinct on purpose: people read these colours) -- */
   --color-danger: #B3261E;
-  --color-vacant: #2D6A4F;
-  --color-booked: #8D8D8D;
+  --color-danger-tint: #FBE3E1;
+  --color-danger-tint-border: #F0C2BD;
+  --color-warning: #8A5A00;
+  --color-warning-tint: #FFF1D6;
+
+  /* -- Room status badges (white text on each) -- */
+  --color-vacant: var(--brand-green);     /* available */
+  --color-reserved: #9A6200;
+  --color-booked: #5F6670;                /* occupied / unavailable */
+  --color-maintenance: #8A4B2A;
+
   --radius: 10px;
   --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -26,26 +61,37 @@ body {
   line-height: 1.5;
 }
 
+/* Headings use the brand navy, like PearlVector's own materials. */
+h1, h2, h3 { color: var(--color-primary); }
+
+/* Keyboard users see where they are. Uses the brand green. */
+:focus-visible { outline: 2px solid var(--color-secondary); outline-offset: 2px; }
+
 .app-main { max-width: 1100px; margin: 0 auto; padding: 16px; }
 
+/* -- Navbar: navy bar with a green line underneath -- */
 .navbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 10;
+  padding: 12px 16px; background: var(--color-primary);
+  border-bottom: 3px solid var(--color-secondary); position: sticky; top: 0; z-index: 10;
 }
-.navbar__brand { font-weight: 700; color: var(--color-primary); text-decoration: none; font-size: 1.1rem; }
+.navbar :focus-visible { outline-color: var(--color-on-primary); }
+.navbar__brand { font-weight: 700; color: var(--color-on-primary); text-decoration: none; font-size: 1.1rem; }
 .navbar__links { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.navbar__links a { color: var(--color-text); text-decoration: none; font-weight: 500; }
+.navbar__links a { color: var(--color-on-primary-soft); text-decoration: none; font-weight: 500; }
+.navbar__links a:hover { color: var(--color-on-primary); text-decoration: underline; }
 .navbar__sub-badge { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
-.navbar__sub-badge--active { background: #E4F3EB; color: var(--color-primary); }
-.navbar__sub-badge--inactive { background: #F0EEE7; color: var(--color-text-muted); }
-.navbar__logout { background: none; border: none; color: var(--color-text-muted); cursor: pointer; }
+.navbar__sub-badge--active { background: var(--color-secondary-tint); color: var(--color-secondary); }
+.navbar__sub-badge--inactive { background: var(--color-primary-tint); color: var(--color-text-muted); }
+.navbar__logout { background: none; border: none; color: var(--color-on-primary-muted); cursor: pointer; }
+.navbar__logout:hover { color: var(--color-on-primary); }
 
 .btn { padding: 10px 18px; border-radius: var(--radius); border: none; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn--primary { background: var(--color-primary); color: white; }
 .btn--primary:hover:not(:disabled) { background: var(--color-primary-hover); }
 .btn--secondary { background: var(--color-surface); color: var(--color-primary); border: 1px solid var(--color-primary); }
+.btn--secondary:hover:not(:disabled) { background: var(--color-primary-tint); }
 .btn--danger { background: var(--color-danger); color: white; }
 
 .field { display: block; margin-bottom: 14px; }
@@ -62,11 +108,14 @@ body {
 .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 
 .auth-page { max-width: 420px; margin: 40px auto; }
+.auth-page h1 { color: var(--color-primary); }
 .role-toggle { display: flex; gap: 8px; margin-bottom: 20px; }
 .role-toggle button { flex: 1; padding: 10px; border: 1px solid var(--color-border); background: var(--color-surface); border-radius: var(--radius); cursor: pointer; }
 .role-toggle__active { border-color: var(--color-primary) !important; color: var(--color-primary); font-weight: 700; }
 
 .room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+/* Cards are wrapped in links; keep the text in our colours, not the browser's default blue. */
+.room-grid a { color: inherit; text-decoration: none; }
 .room-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); overflow: hidden; }
 .room-card__photo-wrap { position: relative; aspect-ratio: 4 / 3; background: var(--color-border); }
 .room-card__photo-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -82,7 +131,7 @@ body {
 .filters { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
 .filters input, .filters select { padding: 10px; border-radius: var(--radius); border: 1px solid var(--color-border); }
 
-.paywall-notice { background: #FBF1EC; border: 1px solid var(--color-accent); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+.paywall-notice { background: var(--color-primary-tint); border: 1px solid var(--color-primary-tint-border); border-left: 4px solid var(--color-accent); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 12px 0 24px; }
 .stat-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 16px; text-align: center; }
@@ -102,7 +151,7 @@ body {
 .welcome-page h1 { font-size: 2rem; margin-bottom: 8px; color: var(--color-primary); }
 .welcome-page__subtitle { color: var(--color-text-muted); font-size: 1.05rem; margin-bottom: 32px; }
 .welcome-page__cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; }
-.welcome-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 24px; }
+.welcome-card { background: var(--color-surface); border: 1px solid var(--color-border); border-top: 4px solid var(--color-secondary); border-radius: var(--radius); padding: 24px; }
 .welcome-card h2 { margin-top: 0; color: var(--color-primary); }
 .welcome-card p { color: var(--color-text-muted); min-height: 3em; }
 .welcome-page__login-hint { margin-top: 24px; color: var(--color-text-muted); }

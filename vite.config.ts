@@ -14,8 +14,8 @@ export default defineConfig({
         name: 'Campus RoomLynk',
         short_name: 'RoomLynk',
         description: "Uganda's direct student-landlord housing marketplace",
-        theme_color: '#1B4332',
-        background_color: '#FDFBF7',
+        theme_color: '#031D4E',
+        background_color: '#F7F8FA',
         display: 'standalone',
         start_url: '/',
         icons: [
