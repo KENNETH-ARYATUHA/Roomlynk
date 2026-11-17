@@ -60,3 +60,14 @@ export function requireRole(...roles: string[]) {
     next();
   };
 }
+
+// Properties and rooms may only be managed by landlords whose account an
+// administrator has APPROVED (doc section 3.1). This runs AFTER requireRole('landlord').
+export function requireApprovedLandlord(req: Request, _res: Response, next: NextFunction) {
+  const profile = req.user?.landlordProfile;
+  if (!profile) throw new HttpError(403, 'Landlord profile not found.');
+  if (profile.accountStatus !== 'approved') {
+    throw new HttpError(403, 'Your landlord account must be approved before you can manage properties and rooms.');
+  }
+  next();
+}

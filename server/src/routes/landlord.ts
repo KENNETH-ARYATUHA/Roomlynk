@@ -1,8 +1,7 @@
-// LANDLORD-ONLY endpoints.
+//   PATCH /api/landlord/profile      → fix registration details and resubmit for review
+//   /api/landlord/properties/...     → manage my properties (approved landlords only)
 //
-//   PATCH /api/landlord/profile   → fix registration details and resubmit for review
-//
-// (Phase 2 will add properties, rooms and camera evidence here.)
+// (Rooms and camera evidence are added in later tasks.)
 
 import { Router } from 'express';
 import { z } from 'zod';
@@ -10,12 +9,17 @@ import { prisma } from '../db';
 import { HttpError } from '../lib/errors';
 import { recordAudit } from '../lib/audit';
 import { toPublicUser } from '../lib/serialize';
-import { requireAuth, requireRole } from '../middleware/auth';
+import { requireAuth, requireRole, requireApprovedLandlord } from '../middleware/auth';
 
+import { propertiesRouter } from './properties';
 export const landlordRouter = Router();
 
 // Every route in this file needs a logged-in landlord.
 landlordRouter.use(requireAuth, requireRole('landlord'));
+
+// Properties need an APPROVED account. (The /profile route below stays open to every
+// landlord, because a rejected landlord must still be able to fix and resubmit.)
+landlordRouter.use('/properties', requireApprovedLandlord, propertiesRouter);
 
 const profileSchema = z.object({
   hostelName: z.string().trim().min(2, 'Hostel name is required.'),
