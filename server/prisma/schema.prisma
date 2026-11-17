@@ -1,5 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// DATABASE SCHEMA — the "Core Data Entities" section of the documentation.
+// ---------------------------------------------------------------------
+// DATABASE SCHEMA - the "Core Data Entities" section of the documentation.
 //
 // Prisma reads this file and (1) creates the tables for us and
 // (2) generates a fully-typed JavaScript client (`prisma.user.findMany()`).
@@ -8,7 +8,7 @@
 // limited enum support. We keep allowed values in comments here and enforce
 // them in code (see src/routes). When we move to PostgreSQL we can
 // upgrade these to real enums.
-// ─────────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------
 
 generator client {
   provider = "prisma-client-js"
@@ -35,7 +35,7 @@ model User {
   landlordProfile LandlordProfile?
 }
 
-// Doc §3: "Landlord profile" — the registration that an administrator approves.
+// Doc section 3: "Landlord profile" - the registration that an administrator approves.
 model LandlordProfile {
   id     String @id @default(cuid())
   userId String @unique
@@ -49,7 +49,7 @@ model LandlordProfile {
   longitude  Float?
 
   // pending_review | approved | changes_required | rejected | suspended
-  // This single field is the "approval gate" described in doc §3.3.
+  // This single field is the "approval gate" described in doc section 3.3.
   accountStatus String    @default("pending_review")
   reviewReason  String? // admin must give a reason for any non-approval decision
   reviewedById  String? // which admin made the last decision
@@ -59,7 +59,7 @@ model LandlordProfile {
   properties Property[]
 }
 
-// Doc §5.2: one landlord can manage one or more hostels/properties.
+// Doc section 5.2: one landlord can manage one or more hostels/properties.
 model Property {
   id                String          @id @default(cuid())
   landlordProfileId String
@@ -76,7 +76,7 @@ model Property {
   rooms Room[]
 }
 
-// Doc §5.2: every room has its OWN price, status and details.
+// Doc section 5.2: every room has its OWN price, status and details.
 model Room {
   id         String   @id @default(cuid())
   propertyId String
@@ -94,14 +94,17 @@ model Room {
   houseRules    String?
   description   String
 
-  // available | reserved | occupied | maintenance | unavailable  (doc §5.2)
+  // available | reserved | occupied | maintenance | unavailable  (doc section 5.2)
   status String @default("available")
-  // draft | published | hidden | suspended  (doc §3.3)
+  // draft | published | hidden | suspended  (doc section 3.3)
   // "published" = the landlord has made it visible. No admin approval needed.
   listingStatus String @default("draft")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // Set when a landlord "removes" a room. We never erase the row: bookings and receipts
+  // that point to it must keep working. A room with deletedAt set is invisible everywhere.
+  deletedAt DateTime?
 
   @@unique([propertyId, label]) // two rooms in one hostel can't share a label
 }
@@ -119,7 +122,7 @@ model OtpCode {
   @@index([phone])
 }
 
-// Doc §16: "append-only audit events for approvals, ledger changes...".
+// Doc section 16: "append-only audit events for approvals, ledger changes...".
 // We only ever INSERT into this table. Never update or delete.
 model AuditEvent {
   id         String   @id @default(cuid())

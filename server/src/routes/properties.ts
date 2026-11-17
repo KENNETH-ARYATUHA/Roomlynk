@@ -54,7 +54,8 @@ function toJson(p: PropertyWithCount) {
   };
 }
 
-const withRoomCount = { _count: { select: { rooms: true } } } as const;
+// Count only rooms that haven't been removed.
+const withRoomCount = { _count: { select: { rooms: { where: { deletedAt: null } } } } } as const;
 
 // "Kikungiri  LODGE" and "kikungiri lodge" count as the same name.
 const normalise = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();

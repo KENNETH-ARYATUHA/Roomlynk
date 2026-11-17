@@ -3,7 +3,7 @@
 //   GET /api/rooms?area=&roomType=&minPrice=&maxPrice=&query=
 //   GET /api/rooms/:id
 //
-// ★ THE MOST IMPORTANT RULE IN THIS FILE (doc §16) ★
+// * THE MOST IMPORTANT RULE IN THIS FILE (doc section 16) *
 // "Hiding an unapproved hostel in the user interface is not sufficient: rooms
 //  belonging to pending, rejected or suspended landlord accounts must not be
 //  retrievable through public APIs, direct links or map/search results."
@@ -15,16 +15,19 @@ import { z } from 'zod';
 import { prisma } from '../db';
 import { HttpError } from '../lib/errors';
 import { toPublicRoom } from '../lib/serialize';
+import { ROOM_TYPES, FACILITIES, BILLING_PERIODS, ROOM_STATUSES } from '../lib/roomOptions';
 
 export const roomsRouter = Router();
 
 // A room is publicly visible only if:
-//   • the landlord clicked "publish"          (listingStatus = published)
-//   • the landlord's account is approved      (accountStatus = approved)
-//   • the user behind it isn't banned         (user.status = active)
-// There is deliberately NO per-room admin approval (doc §3.1).
+//   - the landlord clicked "publish"          (listingStatus = published)
+//   - the landlord's account is approved      (accountStatus = approved)
+//   - the user behind it isn't banned         (user.status = active)
+//   - the room hasn't been removed            (deletedAt is empty)
+// There is deliberately NO per-room admin approval (doc section 3.1).
 const publiclyVisible = {
   listingStatus: 'published',
+  deletedAt: null,
   property: { landlordProfile: { accountStatus: 'approved', user: { status: 'active' } } },
 } as const;
 
@@ -42,7 +45,7 @@ roomsRouter.get('/', async (req, res) => {
   const rooms = await prisma.room.findMany({
     where: {
       ...publiclyVisible,
-      status: 'available', // doc §5.2: occupied/reserved/maintenance rooms must not appear as available
+      status: 'available', // doc section 5.2: occupied/reserved/maintenance rooms must not appear as available
       ...(f.roomType ? { roomType: f.roomType } : {}),
       ...((f.minPrice || f.maxPrice) ? { price: { ...(f.minPrice ? { gte: f.minPrice } : {}), ...(f.maxPrice ? { lte: f.maxPrice } : {}) } } : {}),
       property: {
@@ -56,6 +59,18 @@ roomsRouter.get('/', async (req, res) => {
   });
 
   res.json(rooms.map(toPublicRoom));
+});
+
+// The allowed choices for room types, facilities and so on. The landlord's room form and the
+// student's filters both read this, so the lists live in ONE place (server/src/lib/roomOptions.ts).
+// IMPORTANT: this must stay ABOVE '/:id', otherwise "options" would be treated as a room id.
+roomsRouter.get('/options', (_req, res) => {
+  res.json({
+    roomTypes: ROOM_TYPES,
+    facilities: FACILITIES,
+    billingPeriods: BILLING_PERIODS,
+    roomStatuses: ROOM_STATUSES,
+  });
 });
 
 roomsRouter.get('/:id', async (req, res) => {
