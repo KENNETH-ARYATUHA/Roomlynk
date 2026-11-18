@@ -19,12 +19,6 @@ export const FACILITIES = [
   'Security',
   'Kitchen access',
   'Parking',
-  'single bedroom',
-  'double bedroom',
-  'shared room',
-  'self-contained',
-  'studio',
-  'apartment',
 ] as const;
 
 export const BILLING_PERIODS = ['month', 'semester'] as const;
