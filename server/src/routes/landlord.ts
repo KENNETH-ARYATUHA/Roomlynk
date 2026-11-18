@@ -1,7 +1,10 @@
-//   PATCH /api/landlord/profile      → fix registration details and resubmit for review
-//   /api/landlord/properties/...     → manage my properties (approved landlords only)
+// LANDLORD-ONLY endpoints.
 //
-// (Rooms and camera evidence are added in later tasks.)
+//   PATCH /api/landlord/profile      -> fix registration details and resubmit for review
+//   /api/landlord/properties/...     -> manage my properties (approved landlords only)
+//   /api/landlord/rooms/...          -> manage my rooms (approved landlords only)
+//
+// (Camera evidence is added in a later task.)
 
 import { Router } from 'express';
 import { z } from 'zod';
@@ -10,16 +13,18 @@ import { HttpError } from '../lib/errors';
 import { recordAudit } from '../lib/audit';
 import { toPublicUser } from '../lib/serialize';
 import { requireAuth, requireRole, requireApprovedLandlord } from '../middleware/auth';
-
 import { propertiesRouter } from './properties';
+import { landlordRoomsRouter } from './landlordRooms';
+
 export const landlordRouter = Router();
 
 // Every route in this file needs a logged-in landlord.
 landlordRouter.use(requireAuth, requireRole('landlord'));
 
-// Properties need an APPROVED account. (The /profile route below stays open to every
+// Properties and rooms need an APPROVED account. (The /profile route below stays open to every
 // landlord, because a rejected landlord must still be able to fix and resubmit.)
 landlordRouter.use('/properties', requireApprovedLandlord, propertiesRouter);
+landlordRouter.use('/rooms', requireApprovedLandlord, landlordRoomsRouter);
 
 const profileSchema = z.object({
   hostelName: z.string().trim().min(2, 'Hostel name is required.'),
@@ -28,7 +33,7 @@ const profileSchema = z.object({
   address: z.string().trim().optional(),
 });
 
-// Doc §3.1: "If a landlord account is rejected or requires changes ... the landlord
+// Doc section 3.1: "If a landlord account is rejected or requires changes ... the landlord
 // can correct and resubmit the registration."
 landlordRouter.patch('/profile', async (req, res) => {
   const profile = req.user!.landlordProfile;
