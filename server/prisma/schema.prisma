@@ -4,10 +4,12 @@
 // Prisma reads this file and (1) creates the tables for us and
 // (2) generates a fully-typed JavaScript client (`prisma.user.findMany()`).
 //
-// Why Strings instead of enums? SQLite (our zero-setup dev database) has
-// limited enum support. We keep allowed values in comments here and enforce
-// them in code (see src/routes). When we move to PostgreSQL we can
-// upgrade these to real enums.
+// Database: PostgreSQL (CLAUDE.md section 10). Changes to this file are applied with
+// Prisma MIGRATIONS (npm run db:migrate), which keep a history of every change.
+//
+// Why Strings instead of enums? Allowed values are listed in comments here and
+// enforced in code (see src/lib/roomOptions.ts and src/routes). PostgreSQL supports
+// real enums, so upgrading these is a possible later improvement.
 // ---------------------------------------------------------------------
 
 generator client {
@@ -15,7 +17,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -90,7 +92,7 @@ model Room {
   billingPeriod String  @default("month") // month | semester
   deposit       Int     @default(0)
   otherCharges  String? // free text for now, e.g. "Water UGX 10,000/month"
-  facilities    String  @default("[]") // JSON array stored as text (SQLite has no arrays)
+  facilities    String  @default("[]") // JSON array stored as text (a native array/Json column is a possible later upgrade)
   houseRules    String?
   description   String
 
