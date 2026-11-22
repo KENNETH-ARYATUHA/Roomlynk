@@ -1,75 +1,98 @@
-# React + TypeScript + Vite
+# Campus RoomLynk
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Accommodation platform for university students around Kabale University, Uganda.
+Students find rooms, landlords register hostels and manage rooms, and administrators approve
+landlords and monitor the platform. Project rules and requirements: see [CLAUDE.md](CLAUDE.md).
 
-Currently, two official plugins are available:
+**Stack:** React + TypeScript + Vite (PWA) / Node.js + Express + TypeScript / Prisma / PostgreSQL
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Folders
 
-## React Compiler
+| Folder | What it holds |
+|---|---|
+| ` src/` | The React website (feature folders: `features/auth`, `student`, `landlord`, `admin`) |
+| `server/` | The Express API |
+| `server/prisma/` | The database design (`schema.prisma`), the migration history (`migrations/`) and demo data (`seed.ts`) |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## First-time setup (Windows PowerShell)
 
-## Expanding the ESLint configuration
+You need Node.js, Git and PostgreSQL 18 (the EDB installer from postgresql.org).
+Use `npm.cmd` and `npx.cmd` so PowerShell's script policy does not get in the way.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**1. Create the database and a dedicated app user** (not the `postgres` administrator)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```powershell
+& "C:\Program Files\PostgreSQL\18\bin\psql.exe" -U postgres -h localhost
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+At the `postgres=#` prompt, type the lines below. `\password` asks for the new password
+without showing it. A generated one works well:
+`node -e "console.log(require('crypto').randomBytes(18).toString('base64url'))"`
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```sql
+CREATE ROLE roomlynk_app WITH LOGIN CREATEDB;
+\password roomlynk_app
+CREATE DATABASE roomlynk OWNER roomlynk_app;
+\q
 ```
+
+**2. The API**
+
+```powershell
+cd server
+npm.cmd install
+Copy-Item .env.example .env
+```
+
+Open `server\.env` and set `DATABASE_URL` (put the app password in) and `JWT_SECRET`
+(`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`). Then:
+
+```powershell
+npm.cmd run db:migrate
+npm.cmd run db:seed
+npm.cmd run dev
+```
+
+The API runs on http://localhost:3000 (check http://localhost:3000/api/health).
+
+**3. The website** (a second terminal, from the project root)
+
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
+
+Open http://localhost:5173.
+
+## Demo logins (after `npm.cmd run db:seed`)
+
+Log in with the phone number. In development the 6-digit code is shown on the verify page
+and printed in the API terminal (SMS is not connected yet).
+
+| Phone | Role |
+|---|---|
+| 0700000001 | Administrator |
+| 0700000002 | Approved landlord (has rooms) |
+| 0700000003 | Landlord pending approval (its room must stay hidden from students) |
+| 0700000004 | Student |
+
+## Changing the database structure
+
+1. Edit `server/prisma/schema.prisma`.
+2. From the `server` folder run `npm.cmd run db:migrate -- --name short_description_of_change`.
+3. Commit the new folder that appears in `server/prisma/migrations/`.
+
+Never edit a migration that has been committed. Never reset or delete the database, or run any
+destructive command, without explicit permission (see CLAUDE.md). On a real server, apply
+migrations with `npm.cmd run db:deploy`.
+
+## Checks before committing
+
+```powershell
+npm.cmd run lint
+npm.cmd run build
+cd server
+npm.cmd run typecheck
+```
+
+Never commit `.env` files or database files.

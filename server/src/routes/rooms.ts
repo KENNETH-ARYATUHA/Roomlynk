@@ -51,7 +51,9 @@ roomsRouter.get('/', async (req, res) => {
       property: {
         ...publiclyVisible.property,
         ...(f.area ? { area: f.area } : {}),
-        ...(f.query ? { name: { contains: f.query } } : {}),
+        // mode: 'insensitive' = ignore capital letters. SQLite did this by itself; PostgreSQL does not,
+        // so without it a search for "rwamukundi" would not find "Rwamukundi Heights".
+        ...(f.query ? { name: { contains: f.query, mode: 'insensitive' as const } } : {}),
       },
     },
     include: { property: true },

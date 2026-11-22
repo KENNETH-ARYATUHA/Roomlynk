@@ -61,7 +61,7 @@ const myLandlordProfileId = (req: Request): string => req.user!.landlordProfile!
 
 type RoomWithProperty = Room & { property: Property };
 
-// Facilities are stored as JSON text in SQLite; read them back defensively.
+// Facilities are stored as JSON text (see schema.prisma); read them back defensively.
 function parseFacilities(raw: string): string[] {
   try {
     const value: unknown = JSON.parse(raw);
